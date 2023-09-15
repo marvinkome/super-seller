@@ -6,38 +6,30 @@ import { isFullPageOrDatabase } from "@notionhq/client";
 import { notFound } from "next/navigation";
 
 async function getProduct(params: PageProps["params"]) {
-  const product = await notion.pages
+  const sellerProduct = await notion.pages
     .retrieve({
-      page_id: params.productId,
+      page_id: params.id,
     })
     .catch(() => {
       return undefined;
     });
 
-  if (!product || !isFullPageOrDatabase(product)) return notFound();
+  if (!sellerProduct || !isFullPageOrDatabase(sellerProduct)) return notFound();
 
-  const sellerProductId = (product.properties["Sellers"] as any).relation?.[0]?.id;
-  if (!sellerProductId) return notFound();
+  const productId = (sellerProduct.properties["Product"] as any).relation?.[0]?.id;
+  if (!productId) return notFound();
 
-  const sellerProduct = await notion.pages.retrieve({ page_id: sellerProductId }).catch(() => {
+  const product = await notion.pages.retrieve({ page_id: productId }).catch(() => {
     return undefined;
   });
-  if (!sellerProduct || !isFullPageOrDatabase(sellerProduct)) {
-    return notFound();
-  }
-
-  const sellerId = (sellerProduct.properties["Seller"] as any).relation?.[0]?.id;
-  if (!sellerId) return notFound();
-
-  if (sellerId.replaceAll("-", "") !== params.sellerId) return notFound();
+  if (!product || !isFullPageOrDatabase(product)) return notFound();
 
   return product;
 }
 
 type PageProps = {
   params: {
-    productId: string;
-    sellerId: string;
+    id: string;
   };
 };
 const Page = async (props: PageProps) => {

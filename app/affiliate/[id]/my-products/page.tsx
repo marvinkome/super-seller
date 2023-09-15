@@ -7,9 +7,9 @@ import { getSellerObject } from "../util";
 async function getSellerData(sellerId: string) {
   const seller = await getSellerObject(sellerId);
 
-  let title = "";
+  let name = "";
   if (seller.properties["Name"].type === "title" && seller.properties["Name"].title) {
-    title = seller.properties["Name"].title.map((t) => t.plain_text).join("");
+    name = seller.properties["Name"].title.map((t) => t.plain_text).join("");
   }
 
   let sellerProductIds: string[] = [];
@@ -38,7 +38,7 @@ async function getSellerData(sellerId: string) {
   }
 
   return {
-    title,
+    name,
     products,
   };
 }
@@ -49,17 +49,17 @@ type PageProps = {
   };
 };
 export default async function Page(props: PageProps) {
-  const { title, products } = await getSellerData(props.params.id);
+  const { name, products } = await getSellerData(props.params.id);
 
   return (
     <main className="h-full max-w-screen-lg mx-auto px-6 py-20">
       <header className="mb-10">
-        <p className="text-base text-neutral-500 mb-1">Hello</p>
+        <p className="text-base text-neutral-500 mb-1">Hello {name}</p>
         <h1 className="text-3xl font-semibold">My Products</h1>
       </header>
 
       <div className="grid gap-4 grid-cols-3">
-        {[].map((product: any) => {
+        {products.map((product: any) => {
           const title = product.properties["Name"]["title"][0].plain_text;
           const price = product.properties["Product Price"].number;
           const commision = product.properties["Commision"].number;
