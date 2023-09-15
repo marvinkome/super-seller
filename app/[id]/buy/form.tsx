@@ -18,7 +18,7 @@ const Form = ({ productName, amount }: { productName: string; amount: number }) 
   const [phone, setPhone] = React.useState("");
 
   const initializePayment = usePaystackPayment({
-    reference: `${productName}-${params.id}-${Date.now()}`,
+    reference: `${productName.replaceAll(" ", "-")}-${params.id}-${Date.now()}`,
     email,
     amount,
     publicKey: env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
