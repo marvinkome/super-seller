@@ -1,31 +1,7 @@
 import cn from "classnames";
 import Link from "next/link";
 import NextImage from "next/image";
-import { notion } from "@/libs/notion";
-import { isFullPageOrDatabase } from "@notionhq/client";
-import { notFound } from "next/navigation";
-
-async function getProduct(params: PageProps["params"]) {
-  const sellerProduct = await notion.pages
-    .retrieve({
-      page_id: params.id,
-    })
-    .catch(() => {
-      return undefined;
-    });
-
-  if (!sellerProduct || !isFullPageOrDatabase(sellerProduct)) return notFound();
-
-  const productId = (sellerProduct.properties["Product"] as any).relation?.[0]?.id;
-  if (!productId) return notFound();
-
-  const product = await notion.pages.retrieve({ page_id: productId }).catch(() => {
-    return undefined;
-  });
-  if (!product || !isFullPageOrDatabase(product)) return notFound();
-
-  return product;
-}
+import { getProduct } from "./query";
 
 type PageProps = {
   params: {
@@ -33,7 +9,7 @@ type PageProps = {
   };
 };
 const Page = async (props: PageProps) => {
-  const product = await getProduct(props.params);
+  const product = await getProduct(props.params.id);
 
   const title = (product.properties["Name"] as any).title[0].plain_text;
   const price = (product.properties["Product Price"] as any).number;
@@ -51,7 +27,7 @@ const Page = async (props: PageProps) => {
         </div>
 
         <Link
-          href="/"
+          href={`/${props.params.id}/buy`}
           className={cn(
             "w-auto inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ease-in duration-150",
             "text-neutral-600 dark:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 dark:border dark:border-neutral-700",
