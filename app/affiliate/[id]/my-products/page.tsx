@@ -1,6 +1,6 @@
 import NextImage from "next/image";
-import { notion, Pages } from "@/libs/notion";
-import { notFound } from "next/navigation";
+import Link from "next/link";
+import { notion } from "@/libs/notion";
 import { isFullPageOrDatabase } from "@notionhq/client";
 import { getSellerObject } from "../util";
 
@@ -19,22 +19,25 @@ async function getSellerData(sellerId: string) {
 
   let products = [];
   for (let sellerProductId of sellerProductIds) {
-    const sellerProductsDb = await notion.pages.retrieve({
+    const sellerProduct = await notion.pages.retrieve({
       page_id: sellerProductId,
     });
 
-    if (!isFullPageOrDatabase(sellerProductsDb)) continue;
+    if (!isFullPageOrDatabase(sellerProduct)) continue;
 
     let product;
-    if (sellerProductsDb.properties["Product"].type === "relation") {
+    if (sellerProduct.properties["Product"].type === "relation") {
       product = await notion.pages.retrieve({
-        page_id: sellerProductsDb.properties["Product"].relation[0].id,
+        page_id: sellerProduct.properties["Product"].relation[0].id,
       });
     }
 
     if (!product || !isFullPageOrDatabase(product)) continue;
 
-    products.push(product);
+    products.push({
+      product,
+      sellerProduct,
+    });
   }
 
   return {
@@ -52,18 +55,25 @@ export default async function Page(props: PageProps) {
   const { name, products } = await getSellerData(props.params.id);
 
   return (
-    <main className="h-full max-w-screen-lg mx-auto px-6 py-20">
-      <header className="mb-10">
-        <p className="text-base text-neutral-500 mb-1">Hello {name}</p>
-        <h1 className="text-3xl font-semibold">My Products</h1>
+    <main className="h-full max-w-screen-lg mx-auto px-6 py-12 sm:py-20">
+      <header className="flex flex-col-reverse sm:flex-row mb-10 justify-between sm:items-center">
+        <div>
+          <p className="text-base text-neutral-500 sm:mb-1">Hello {name}</p>
+          <h1 className="text-3xl font-semibold">My Products</h1>
+        </div>
+
+        <Link href={`/affiliate/${props.params.id}`} className="hover:underline text-sm text-neutral-500 mb-2 sm:mb-0">
+          See all products
+        </Link>
       </header>
 
-      <div className="grid gap-4 grid-cols-3">
-        {products.map((product: any) => {
+      <div className="pb-20 grid gap-6 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+        {products.map(({ sellerProduct, product }: any) => {
           const title = product.properties["Name"]["title"][0].plain_text;
           const price = product.properties["Product Price"].number;
           const commision = product.properties["Commision"].number;
           const productImage = product.properties["Images"]["files"][0].file.url;
+          const link = sellerProduct.properties.Link.formula.string;
 
           return (
             <div key={product.id} className="">
@@ -72,6 +82,9 @@ export default async function Page(props: PageProps) {
               <p className="text-neutral-600 text-sm">
                 Price: <span className="font-semibold">N{price}</span> (Commision: N{commision})
               </p>
+              <Link href={link} className="text-purple-500 text-sm hover:text-purple-700">
+                Your affiliate product link
+              </Link>
             </div>
           );
         })}

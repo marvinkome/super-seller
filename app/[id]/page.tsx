@@ -54,7 +54,7 @@ const Page = async (props: PageProps) => {
               alt={title}
               width={320}
               height={320}
-              className="w-full object-cover mb-2 rounded-md h-60"
+              className="w-full object-cover mb-2 rounded-md h-20"
             />
           ))}
         </div>
